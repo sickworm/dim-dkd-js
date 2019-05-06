@@ -1,24 +1,25 @@
 import { Message, Envelope } from '../src/message'
 
-describe('my-app:isArrayLike', () => {
+describe('message.ts', () => {
+  const time = new Date().getTime()
+
   test('new Envelope', () => {
-    const time = new Date().getTime()
-    const envelope = new Envelope('alice', 'bob', time)
+    const envelope: Envelope = {
+      sender: 'alice',
+      receiver: 'bob',
+      time: time
+    }
     expect(envelope.sender).toBe('alice')
     expect(envelope.receiver).toBe('bob')
     expect(envelope.time).toBe(time)
   })
 
   test('new Message', () => {
-    const time = new Date().getTime()
     const message = new Message({
-      sender: 'alice',
-      receiver: 'bob',
-      time: time
+        sender: 'alice',
+        receiver: 'bob',
+        time: time
     })
-    const envelope = new Envelope('alice', 'bob', time)
-    expect(message.envelope).toEqual(envelope)
-
     expect(message.sender).toBe('alice')
     expect(message.receiver).toBe('bob')
     expect(message.time).toBe(time)
@@ -34,8 +35,6 @@ describe('my-app:isArrayLike', () => {
       arg2: 101,
       arg3: false
     })
-    const envelope = new Envelope('alice', 'bob', time)
-    expect(message.envelope).toEqual(envelope)
 
     expect(message.sender).toBe('alice')
     expect(message.receiver).toBe('bob')

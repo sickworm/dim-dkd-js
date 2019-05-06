@@ -1,28 +1,30 @@
 
-class Envelope {
-    public readonly sender: string
-    public readonly receiver: string
-    public readonly time: number
-    
-    public constructor(sender: string, receiver: string, time: number) {
-        this.sender = sender
-        this.receiver = receiver
-        this.time = time
-    }
+interface Envelope {
+    sender: string
+    receiver: string
+    time: number
 }
 
-class Message {
-    public readonly envelope: Envelope
+interface MessageConstructor extends Envelope {
     [key: string]: any
+}
 
-    public constructor(msg: any) {
-        this.envelope = new Envelope(msg.sender, msg.receiver, msg.time)
+class Message implements MessageConstructor {
+    sender: string
+    receiver: string
+    time: number
+    [key: string]: any
+    
+    public constructor(msg: MessageConstructor) {
+        this.sender = msg.sender
+        this.receiver = msg.receiver
+        this.time = msg.time
         for (const key in msg) {
-            if (key in msg) {
+            if (msg.hasOwnProperty(key)) {
                 this[key] = msg[key]
             }
         }
     }
 }
 
-export {Envelope, Message}
+export {Envelope, MessageConstructor, Message}
