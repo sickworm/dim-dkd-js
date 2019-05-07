@@ -30,26 +30,11 @@ enum MessageType {
     Forward = 0xFF,  // 1111 1111
 }
 
-class Content {
-    // public type: number
-    // public serialNumber: number
-    // public group: string
+interface Content {
+    type: number
+    serialNumber: number
+    group: string
     [key: string]: any
-
-    public constructor(msg: any) {
-        if (!msg) {
-            throw new TypeError(`invalid argument msg: ${JSON.stringify(msg)}`)
-        }
-        for (const key in msg) {
-            if (key in msg) {
-                this[key] = msg[key]
-            }
-        }
-    }
-
-    public static fromType (type: number) {
-        
-    }
 }
 
 export {MessageType, Content}

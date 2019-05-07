@@ -15,11 +15,11 @@ describe('message.ts', () => {
   })
 
   test('new Message', () => {
-    const message = new Message({
+    const message: Message = {
         sender: 'alice',
         receiver: 'bob',
         time: time
-    })
+    }
     expect(message.sender).toBe('alice')
     expect(message.receiver).toBe('bob')
     expect(message.time).toBe(time)
@@ -27,14 +27,14 @@ describe('message.ts', () => {
 
   test('new Message with extra arguments', () => {
     const time = new Date().getTime()
-    const message = new Message({
+    const message: Message = {
       sender: 'alice',
       receiver: 'bob',
       time: time,
       arg1: 'this is arg1',
       arg2: 101,
       arg3: false
-    })
+    }
 
     expect(message.sender).toBe('alice')
     expect(message.receiver).toBe('bob')
