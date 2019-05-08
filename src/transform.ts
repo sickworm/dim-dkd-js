@@ -60,7 +60,7 @@ interface InstantMessage extends Message {
 interface SecureMessage extends Message {
     data: string
     key: string | null
-    keys: Map<string, string> | null
+    keys: Keys | null
     group: string | null
 }
 
@@ -71,6 +71,10 @@ interface SecureMessage extends Message {
 interface ReliableMessage extends SecureMessage {
     signature: string
     meta: any
+}
+
+interface Keys {
+    [key: string]: string;
 }
 
 interface Encryptor {
@@ -111,9 +115,9 @@ class Transform {
         
         let group = null
         let key = null
-        let keys = null
+        let keys: Keys | any = null
         if (!members) {
-            key = this.crypto.encryptKey(ins, password, ins.receiver)
+            key = this.crypto.encryptKey(ins, password, ins.receiver).toString('base64')
             // TODO reused key for contact when key = null?
         } else {
             keys = []
@@ -179,7 +183,7 @@ class Transform {
     }
  
     public verify(rel: ReliableMessage): SecureMessage {
-        if (!this.crypto.verify(rel, Buffer.from(rel.data, 'base64'), Buffer.from(rel.key), rel.sender)) {
+        if (!this.crypto.verify(rel, Buffer.from(rel.data, 'base64'), Buffer.from(rel.key as string), rel.sender)) {
             throw new Error(`verify signature failed ${rel}`)
         }
         let sec = Object.assign({}, rel)
