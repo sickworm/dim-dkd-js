@@ -19,8 +19,6 @@
  */
 import {Envelope, Message} from './message'
 import {Content} from './content'
-import { AssertionError } from 'assert';
-import { verify } from 'crypto';
 
 /**
     Instant Message
@@ -92,7 +90,7 @@ interface Signer {
     verify(msg: ReliableMessage, data: Buffer, signature: Buffer, sender: string): boolean
 }
 
-interface Crypto extends Encryptor, Decryptor, Signer {
+ interface Crypto extends Encryptor, Decryptor, Signer {
 
 }
 
@@ -191,3 +189,5 @@ class Transform {
         return sec
     }
 }
+
+export {InstantMessage, SecureMessage, ReliableMessage, Transform, Crypto}
