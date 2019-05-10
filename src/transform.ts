@@ -17,7 +17,7 @@
         key       = receiver.public_key.encrypt(password)
         signature = sender.private_key.sign(data)
  */
-import {Envelope, Message} from './message'
+import {Message} from './message'
 import {Content} from './content'
 
 /**
@@ -57,9 +57,9 @@ interface InstantMessage extends Message {
 */
 interface SecureMessage extends Message {
     data: string
-    key: string | null
-    keys: Keys | null
-    group: string | null
+    key?: string
+    keys?: Keys
+    group?: string
 }
 
 /**
@@ -81,7 +81,7 @@ interface Encryptor {
 }
 
 interface Decryptor {
-    decryptKey(msg: SecureMessage, key: Buffer, sender: string, receiver: string, group: string | null): string
+    decryptKey(msg: SecureMessage, key: Buffer, sender: string, receiver: string, group: string | undefined): string
     decryptContent(msg: SecureMessage, data: Buffer, key: string): Content
 }
 
@@ -108,27 +108,25 @@ class Transform {
         :param members:  If this is a group message, get all members here
         :return: SecureMessage object
      */
-    public encrypt(ins: InstantMessage, password: string, members: Array<string> | null = null): SecureMessage {
+    public encrypt(ins: InstantMessage, password: string, members: Array<string> | undefined = undefined): SecureMessage {
         let data = this.crypto.encryptContent(ins, ins.content, password).toString('base64')
         
-        let group = null
         let key = null
-        let keys: Keys | any = null
         if (!members) {
             key = this.crypto.encryptKey(ins, password, ins.receiver).toString('base64')
             // TODO reused key for contact when key = null?
+            return Object.assign({key, data}, ins)
         } else {
-            keys = []
+            let keys: Keys = {}
             for (const member of members) {
-                let key = this.crypto.encryptKey(ins, password, ins.receiver)
+                let key = this.crypto.encryptKey(ins, password, ins.receiver).toString('base64')
                 keys[member] = key
             }
+            return Object.assign({keys, data}, ins)
         }
-        
-        return Object.assign({key, keys, data, group}, ins)
     }
 
-    public decrypt(sec: SecureMessage, member: string | null = null): InstantMessage {
+    public decrypt(sec: SecureMessage, member: string | undefined = undefined): InstantMessage {
         let group = sec.group
         let key = sec.key
         if (member) {
@@ -163,11 +161,10 @@ class Transform {
     public split(sec: SecureMessage, members: Array<string>): Array<SecureMessage> {
         let secs: Array<SecureMessage> = []
         let keys = sec.keys || {}
-        sec.keys = null
+        delete sec.keys
         for (const member of members) {
             let key = keys[member]
             let memberSec = Object.assign({}, sec)
-            memberSec.keys = null
             memberSec.key = key
             secs.push(memberSec)
         }
