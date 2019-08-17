@@ -108,7 +108,7 @@ class Transform {
         :param members:  If this is a group message, get all members here
         :return: SecureMessage object
      */
-    public encrypt(ins: InstantMessage, password: string, members: Array<string> | undefined = undefined): SecureMessage {
+    public encrypt(ins: InstantMessage, password: string, members: string[] | undefined = undefined): SecureMessage {
         let data = this.crypto.encryptContent(ins, ins.content, password).toString('base64')
         
         let key = null
@@ -158,8 +158,8 @@ class Transform {
         return Object.assign({signature, meta}, sec)
     }
 
-    public split(sec: SecureMessage, members: Array<string>): Array<SecureMessage> {
-        let secs: Array<SecureMessage> = []
+    public split<T extends SecureMessage>(sec: T, members: string[]): T[] {
+        let secs: T[] = []
         let keys = sec.keys || {}
         delete sec.keys
         for (const member of members) {
