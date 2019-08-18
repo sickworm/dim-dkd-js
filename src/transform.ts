@@ -76,21 +76,24 @@ interface Keys {
 }
 
 interface Encryptor {
-    encryptKey(msg: InstantMessage, key: string, receiver: string): Buffer
-    encryptContent(msg: InstantMessage, content: Content, key: string): Buffer
+    // TODO dkd depends on mkm.ID
+    // TODO InstantMessage no use
+    encryptKey(iMsg: InstantMessage, key: string, receiver: string): string
+    encryptContent(iMsg: InstantMessage, content: Content, key: string): string
 }
 
 interface Decryptor {
-    decryptKey(msg: SecureMessage, key: Buffer, sender: string, receiver: string, group: string | undefined): string
-    decryptContent(msg: SecureMessage, data: Buffer, key: string): Content
+    // TODO dkd depends on mkm.Group
+    decryptKey(sMsg: SecureMessage, encryptedKey: string, sender: string, receiver: string, group: string | undefined): string
+    decryptContent(sMsg: SecureMessage, encryptedContent: string, key: string): Content
 }
 
 interface Signer {
-    sign(msg: SecureMessage, data: Buffer, sender: string): Buffer
-    verify(msg: ReliableMessage, data: Buffer, signature: Buffer, sender: string): boolean
+    sign(sMsg: SecureMessage, data: string, sender: string): string
+    verify(sMsg: ReliableMessage, data: string, signature: string, sender: string): boolean
 }
 
- interface Crypto extends Encryptor, Decryptor, Signer {
+interface Crypto extends Encryptor, Decryptor, Signer {
 
 }
 
@@ -108,82 +111,83 @@ class Transform {
         :param members:  If this is a group message, get all members here
         :return: SecureMessage object
      */
-    public encrypt(ins: InstantMessage, password: string, members: string[] | undefined = undefined): SecureMessage {
-        let data = this.crypto.encryptContent(ins, ins.content, password).toString('base64')
+    public encrypt(iMsg: InstantMessage, password: string, members: string[] | undefined = undefined): SecureMessage {
+        let data = this.crypto.encryptContent(iMsg, iMsg.content, password)
         
         let key = null
         if (!members) {
-            key = this.crypto.encryptKey(ins, password, ins.receiver).toString('base64')
+            key = this.crypto.encryptKey(iMsg, password, iMsg.receiver)
             // TODO reused key for contact when key = null?
-            return Object.assign({key, data}, ins)
+            return Object.assign({key, data}, iMsg)
         } else {
             let keys: Keys = {}
             for (const member of members) {
-                let key = this.crypto.encryptKey(ins, password, ins.receiver).toString('base64')
+                let key = this.crypto.encryptKey(iMsg, password, iMsg.receiver)
                 keys[member] = key
             }
-            return Object.assign({keys, data}, ins)
+            return Object.assign({keys, data}, iMsg)
         }
     }
 
-    public decrypt(sec: SecureMessage, member: string | undefined = undefined): InstantMessage {
-        let group = sec.group
-        let key = sec.key
+    public decrypt(sMsg: SecureMessage, member: string | undefined = undefined): InstantMessage {
+        let group = sMsg.group
+        let key = sMsg.key
         if (member) {
             if (!group) {
-                group = sec.receiver
+                group = sMsg.receiver
             }
-            if (sec.keys) {
-                key = sec.keys[member]
+            if (sMsg.keys) {
+                key = sMsg.keys[member]
             }
         }
         if (!key) {
-            throw new TypeError(`decrypt key not found: ${JSON.stringify(sec)}`)
+            throw new TypeError(`decrypt key not found: ${JSON.stringify(sMsg)}`)
         }
 
-        let password = this.crypto.decryptKey(sec, Buffer.from(key, 'base64'), sec.sender, sec.receiver, group)
-        let content = this.crypto.decryptContent(sec, Buffer.from(sec.data, 'base64'), password)
+        let password = this.crypto.decryptKey(sMsg, key, sMsg.sender, sMsg.receiver, group)
+        let content = this.crypto.decryptContent(sMsg, sMsg.data, password)
 
         return {
-            sender: sec.sender,
-            receiver: sec.receiver,
-            time: sec.time,
+            sender: sMsg.sender,
+            receiver: sMsg.receiver,
+            time: sMsg.time,
             content: content
         }
     }
 
-    public sign(sec: SecureMessage): ReliableMessage {
-        let signature = this.crypto.sign(sec, Buffer.from(sec.data, 'base64'), sec.sender).toString('base64')
+    public sign(sMsg: SecureMessage): ReliableMessage {
+        let signature = this.crypto.sign(sMsg, sMsg.data, sMsg.sender)
         let meta = null
-        return Object.assign({signature, meta}, sec)
+        return Object.assign({signature, meta}, sMsg)
     }
 
-    public split<T extends SecureMessage>(sec: T, members: string[]): T[] {
+    public split<T extends SecureMessage>(sMsg: T, members: string[]): T[] {
         let secs: T[] = []
-        let keys = sec.keys || {}
-        delete sec.keys
+        let keys = sMsg.keys || {}
+        delete sMsg.keys
         for (const member of members) {
             let key = keys[member]
-            let memberSec = Object.assign({}, sec)
+            let memberSec = Object.assign({}, sMsg)
             memberSec.key = key
             secs.push(memberSec)
         }
         return secs
     }
 
-    public trim(sec: SecureMessage, member: string) {
-        let key = sec.keys && sec.keys[member] || null
+    public trim(sMsg: SecureMessage, member: string) {
+        let key = sMsg.keys && sMsg.keys[member] || null
         let keys = null
-        return Object.assign({}, sec, {key, keys})
+        return Object.assign({}, sMsg, {key, keys})
     }
  
-    public verify(rel: ReliableMessage): SecureMessage {
-        if (!this.crypto.verify(rel, Buffer.from(rel.data, 'base64'), Buffer.from(rel.key as string), rel.sender)) {
-            throw new Error(`verify signature failed ${rel}`)
+    public verify(rMsg: ReliableMessage): SecureMessage {
+        // TODO check rMsg.key as string
+        if (!this.crypto.verify(rMsg, rMsg.data, rMsg.key as string, rMsg.sender)) {
+            throw new Error(`verify signature failed ${rMsg}`)
         }
-        let sec = Object.assign({}, rel)
-        delete sec.signature
-        return sec
+        let sMsg = Object.assign({}, rMsg)
+        delete sMsg.signature
+        return sMsg
     }
 }
 
