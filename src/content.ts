@@ -31,10 +31,9 @@ enum MessageType {
 }
 
 interface Content {
-    type: number
+    type: MessageType
     serialNumber: number
-    group: string
     [key: string]: any
 }
 
-export {MessageType, Content}
+export { MessageType, Content }
