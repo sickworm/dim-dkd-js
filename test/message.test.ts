@@ -1,3 +1,5 @@
+import 'mocha'
+import * as expect from 'expect'
 import { Message, Envelope } from '../src/message'
 
 describe('message.ts', () => {
