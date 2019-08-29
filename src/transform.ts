@@ -93,6 +93,7 @@ interface Signer {
     verify(sMsg: ReliableMessage, data: string, signature: string, sender: string): boolean
 }
 
+// XXXMessageDelegate in Java
 interface Crypto extends Encryptor, Decryptor, Signer {
 
 }
