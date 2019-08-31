@@ -182,8 +182,7 @@ class Transform {
     }
  
     public verify(rMsg: ReliableMessage): SecureMessage {
-        // TODO check rMsg.key as string
-        if (!this._crypto.verify(rMsg, rMsg.data, rMsg.key as string, rMsg.sender)) {
+        if (!this._crypto.verify(rMsg, rMsg.data, rMsg.signature, rMsg.sender)) {
             throw new Error(`verify signature failed ${JSON.stringify(rMsg)}`)
         }
         let sMsg = Object.assign({}, rMsg)
