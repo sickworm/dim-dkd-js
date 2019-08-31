@@ -99,10 +99,10 @@ interface Crypto extends Encryptor, Decryptor, Signer {
 }
 
 class Transform {
-    public crypto: Crypto
+    private _crypto: Crypto
 
     public constructor(crypto: Crypto) {
-        this.crypto = crypto
+        this._crypto = crypto
     }
 
     /**
@@ -113,17 +113,17 @@ class Transform {
         :return: SecureMessage object
      */
     public encrypt(iMsg: InstantMessage, password: string, members: string[] | undefined = undefined): SecureMessage {
-        let data = this.crypto.encryptContent(iMsg, iMsg.content, password)
+        let data = this._crypto.encryptContent(iMsg, iMsg.content, password)
         
         let key = null
         if (!members) {
-            key = this.crypto.encryptKey(iMsg, password, iMsg.receiver)
+            key = this._crypto.encryptKey(iMsg, password, iMsg.receiver)
             // TODO reused key for contact when key = null?
             return Object.assign({key, data}, iMsg)
         } else {
             let keys: Keys = {}
             for (const member of members) {
-                let key = this.crypto.encryptKey(iMsg, password, iMsg.receiver)
+                let key = this._crypto.encryptKey(iMsg, password, iMsg.receiver)
                 keys[member] = key
             }
             return Object.assign({keys, data}, iMsg)
@@ -145,8 +145,8 @@ class Transform {
             throw new TypeError(`decrypt key not found: ${JSON.stringify(sMsg)}`)
         }
 
-        let password = this.crypto.decryptKey(sMsg, key, sMsg.sender, sMsg.receiver, group)
-        let content = this.crypto.decryptContent(sMsg, sMsg.data, password)
+        let password = this._crypto.decryptKey(sMsg, key, sMsg.sender, sMsg.receiver, group)
+        let content = this._crypto.decryptContent(sMsg, sMsg.data, password)
 
         return {
             sender: sMsg.sender,
@@ -157,7 +157,7 @@ class Transform {
     }
 
     public sign(sMsg: SecureMessage): ReliableMessage {
-        let signature = this.crypto.sign(sMsg, sMsg.data, sMsg.sender)
+        let signature = this._crypto.sign(sMsg, sMsg.data, sMsg.sender)
         let meta = null
         return Object.assign({signature, meta}, sMsg)
     }
@@ -183,8 +183,8 @@ class Transform {
  
     public verify(rMsg: ReliableMessage): SecureMessage {
         // TODO check rMsg.key as string
-        if (!this.crypto.verify(rMsg, rMsg.data, rMsg.key as string, rMsg.sender)) {
-            throw new Error(`verify signature failed ${rMsg}`)
+        if (!this._crypto.verify(rMsg, rMsg.data, rMsg.key as string, rMsg.sender)) {
+            throw new Error(`verify signature failed ${JSON.stringify(rMsg)}`)
         }
         let sMsg = Object.assign({}, rMsg)
         delete sMsg.signature
