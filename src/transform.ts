@@ -68,7 +68,7 @@ interface SecureMessage extends Message {
  */
 interface ReliableMessage extends SecureMessage {
     signature: string
-    meta: any
+    meta?: any
 }
 
 interface Keys {
@@ -89,11 +89,11 @@ interface Decryptor {
 }
 
 interface Signer {
-    sign(sMsg: SecureMessage, data: string, sender: string): string
-    verify(sMsg: ReliableMessage, data: string, signature: string, sender: string): boolean
+    sign(sMsg: SecureMessage): string
+    verify(sMsg: ReliableMessage): boolean
 }
 
-// XXXMessageDelegate in Java
+// XXXMessageDelegate in dim Java
 interface Crypto extends Encryptor, Decryptor, Signer {
 
 }
@@ -119,14 +119,24 @@ class Transform {
         if (!members) {
             key = this._crypto.encryptKey(iMsg, password, iMsg.receiver)
             // TODO reused key for contact when key = null?
-            return Object.assign({key, data}, iMsg)
+            return {
+                sender: iMsg.sender,
+                receiver: iMsg.receiver,
+                time: iMsg.time,
+                key, data
+            }
         } else {
             let keys: Keys = {}
             for (const member of members) {
                 let key = this._crypto.encryptKey(iMsg, password, iMsg.receiver)
                 keys[member] = key
             }
-            return Object.assign({keys, data}, iMsg)
+            return {
+                sender: iMsg.sender,
+                receiver: iMsg.receiver,
+                time: iMsg.time,
+                keys, data
+            }
         }
     }
 
@@ -157,9 +167,8 @@ class Transform {
     }
 
     public sign(sMsg: SecureMessage): ReliableMessage {
-        let signature = this._crypto.sign(sMsg, sMsg.data, sMsg.sender)
-        let meta = null
-        return Object.assign({signature, meta}, sMsg)
+        let signature = this._crypto.sign(sMsg)
+        return Object.assign({signature}, sMsg)
     }
 
     public split<T extends SecureMessage>(sMsg: T, members: string[]): T[] {
@@ -182,7 +191,7 @@ class Transform {
     }
  
     public verify(rMsg: ReliableMessage): SecureMessage {
-        if (!this._crypto.verify(rMsg, rMsg.data, rMsg.signature, rMsg.sender)) {
+        if (!this._crypto.verify(rMsg)) {
             throw new Error(`verify signature failed ${JSON.stringify(rMsg)}`)
         }
         let sMsg = Object.assign({}, rMsg)
