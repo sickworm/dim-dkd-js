@@ -78,8 +78,8 @@ interface Keys {
 interface Encryptor {
     // TODO dkd depends on mkm.ID
     // TODO InstantMessage no use
-    encryptKey(iMsg: InstantMessage, key: string, receiver: string): string
-    encryptContent(iMsg: InstantMessage, content: Content, key: string): string
+    encryptKey(iMsg: InstantMessage, key: string): string
+    encryptContent(iMsg: InstantMessage, key: string): string
 }
 
 interface Decryptor {
@@ -113,11 +113,11 @@ class Transform {
         :return: SecureMessage object
      */
     public encrypt(iMsg: InstantMessage, password: string, members: string[] | undefined = undefined): SecureMessage {
-        let data = this._crypto.encryptContent(iMsg, iMsg.content, password)
+        let data = this._crypto.encryptContent(iMsg, password)
         
         let key = null
         if (!members) {
-            key = this._crypto.encryptKey(iMsg, password, iMsg.receiver)
+            key = this._crypto.encryptKey(iMsg, password)
             // TODO reused key for contact when key = null?
             return {
                 sender: iMsg.sender,
@@ -128,7 +128,7 @@ class Transform {
         } else {
             let keys: Keys = {}
             for (const member of members) {
-                let key = this._crypto.encryptKey(iMsg, password, iMsg.receiver)
+                let key = this._crypto.encryptKey(iMsg, password)
                 keys[member] = key
             }
             return {
