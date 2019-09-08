@@ -84,8 +84,8 @@ interface Encryptor {
 
 interface Decryptor {
     // TODO dkd depends on mkm.Group
-    decryptKey(sMsg: SecureMessage, encryptedKey: string, sender: string, receiver: string, group: string | undefined): string
-    decryptContent(sMsg: SecureMessage, encryptedContent: string, key: string): Content
+    decryptKey(sMsg: SecureMessage, encryptedKey: string, group: string | undefined): string
+    decryptContent(sMsg: SecureMessage, key: string): Content
 }
 
 interface Signer {
@@ -155,8 +155,8 @@ class Transform {
             throw new TypeError(`decrypt key not found: ${JSON.stringify(sMsg)}`)
         }
 
-        let password = this._crypto.decryptKey(sMsg, key, sMsg.sender, sMsg.receiver, group)
-        let content = this._crypto.decryptContent(sMsg, sMsg.data, password)
+        let password = this._crypto.decryptKey(sMsg, key, group)
+        let content = this._crypto.decryptContent(sMsg, password)
 
         return {
             sender: sMsg.sender,
