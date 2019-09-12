@@ -32,8 +32,7 @@ enum MessageType {
 
 interface Content {
     type: MessageType
-    serialNumber: number
-    [key: string]: any
+    sn: number
 }
 
 export { MessageType, Content }
